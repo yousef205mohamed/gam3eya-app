@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جمعيتي</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:white;font-family:Arial;padding:20px}
+header{text-align:center;padding:25px;background:#1d293b;border-radius:18px}
+h1{color:#35d6a0}
+.card{background:#1d293b;padding:18px;margin-top:15px;border-radius:15px}
+.number{font-size:27px;color:#35d6a0;font-weight:bold}
+input,button{width:100%;padding:13px;margin-top:10px;border:0;border-radius:9px;font-size:16px}
+button{background:#35d6a0;color:#101827;font-weight:bold}
+li{padding:12px;border-bottom:1px solid #39465a}
+</style>
+</head>
+<body>
+<header>
+<h1>جمعيتي</h1>
+<p>إدارة الجمعية ومتابعة الأقساط اليومية</p>
+</header>
+
+<div class="card">
+<h3>إجمالي المشتركين</h3>
+<div class="number">20</div>
+</div>
+
+<div class="card">
+<h3>قيمة القسط اليومي</h3>
+<div class="number">100 جنيه</div>
+</div>
+
+<div class="card">
+<h3>إضافة مشترك</h3>
+<input id="name" placeholder="اسم المشترك">
+<input id="phone" placeholder="رقم الهاتف">
+<button onclick="add()">إضافة المشترك</button>
+<ul id="members"></ul>
+</div>
+
+<script>
+function add(){
+let n=document.getElementById('name').value;
+let p=document.getElementById('phone').value;
+if(!n)return alert('اكتب اسم المشترك');
+let li=document.createElement('li');
+li.textContent=n+' - '+p;
+document.getElementById('members').appendChild(li);
+document.getElementById('name').value='';
+document.getElementById('phone').value='';
+}
+</script>
+</body>
+</html>
