@@ -1,0 +1,10 @@
+{
+  "name": "جمعيتي",
+  "short_name": "جمعيتي",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#101827",
+  "theme_color": "#101827",
+  "lang": "ar",
+  "dir": "rtl"
+}
