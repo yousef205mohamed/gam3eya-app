@@ -1,55 +1,176 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>جمعيتي</title>
+<meta name="theme-color" content="#090909">
+<link rel="manifest" href="manifest.json">
+<title>جمعيتي | الإدارة الذكية</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#101827;color:white;font-family:Arial;padding:20px}
-header{text-align:center;padding:25px;background:#1d293b;border-radius:18px}
-h1{color:#35d6a0}
-.card{background:#1d293b;padding:18px;margin-top:15px;border-radius:15px}
-.number{font-size:27px;color:#35d6a0;font-weight:bold}
-input,button{width:100%;padding:13px;margin-top:10px;border:0;border-radius:9px;font-size:16px}
-button{background:#35d6a0;color:#101827;font-weight:bold}
-li{padding:12px;border-bottom:1px solid #39465a}
+body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif;padding:16px}
+header{text-align:center;padding:24px 10px}
+header h1{color:#d6ae53;font-size:32px;margin:5px}
+header p{color:#aaa}
+.gold{color:#d6ae53}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#171717;border:1px solid #393021;border-radius:15px;padding:17px;margin-bottom:13px}
+.card h3{font-size:14px;color:#aaa;margin:0 0 12px}
+.number{font-size:25px;color:#d6ae53;font-weight:bold}
+input,button{font-family:inherit;font-size:15px;border-radius:9px;padding:12px}
+input{background:#101010;border:1px solid #555;color:white;width:100%;margin:6px 0}
+button{border:0;background:#d6ae53;color:#111;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+.full{width:100%;margin-top:8px}
+.member{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #333;padding:13px 0}
+.member:last-child{border:0}
+.member small{display:block;color:#aaa;margin-top:5px}
+.paid{background:#17472e;color:#7affb0;padding:7px 10px;border-radius:8px}
+.unpaid{background:#492020;color:#ff9999;padding:7px 10px;border-radius:8px}
+.smallbtn{padding:8px 10px;font-size:12px}
+.danger{background:#702929;color:white}
+.muted{color:#aaa;font-size:13px}
+section{margin-top:18px}
 </style>
 </head>
 <body>
 <header>
+<div class="gold">✦ نظام الإدارة المالية ✦</div>
 <h1>جمعيتي</h1>
 <p>إدارة الجمعية ومتابعة الأقساط اليومية</p>
 </header>
 
-<div class="card">
-<h3>إجمالي المشتركين</h3>
-<div class="number">20</div>
+<div class="grid">
+<div class="card"><h3>عدد المشتركين</h3><div class="number" id="count">0 / 20</div></div>
+<div class="card"><h3>القسط اليومي</h3><div class="number">100 ج</div></div>
+<div class="card"><h3>تحصيل اليوم</h3><div class="number" id="todayTotal">0 ج</div></div>
+<div class="card"><h3>إجمالي التحصيل</h3><div class="number" id="allTotal">0 ج</div></div>
 </div>
 
-<div class="card">
-<h3>قيمة القسط اليومي</h3>
-<div class="number">100 جنيه</div>
-</div>
+<section class="card">
+<h3>📅 متابعة أقساط اليوم</h3>
+<input type="date" id="payDate">
+<p class="muted">اختر التاريخ وسجل دفع كل مشترك.</p>
+<div id="dailyStatus"></div>
+</section>
 
-<div class="card">
-<h3>إضافة مشترك</h3>
-<input id="name" placeholder="اسم المشترك">
-<input id="phone" placeholder="رقم الهاتف">
-<button onclick="add()">إضافة المشترك</button>
-<ul id="members"></ul>
-</div>
+<section class="card">
+<h3>👥 إضافة مشترك جديد</h3>
+<input id="memberName" placeholder="اسم المشترك">
+<input id="memberPhone" type="tel" placeholder="رقم الهاتف (اختياري)">
+<button class="full" onclick="addMember()">+ إضافة مشترك</button>
+</section>
+
+<section class="card">
+<h3>📋 قائمة المشتركين</h3>
+<div id="members"></div>
+</section>
+
+<section class="card">
+<h3>💰 مواعيد القبض</h3>
+<p class="muted">بداية الجمعية: 10 نوفمبر 2026</p>
+<div id="dates"></div>
+</section>
+
+<section class="card">
+<h3>⚙️ إعدادات الجمعية</h3>
+<p class="muted">عدد المشتركين: 20 — القسط اليومي: 100 جنيه — القبض كل 15 يوم.</p>
+<p class="muted">طريقة الدفع: فودافون كاش</p>
+<button class="full danger" onclick="clearData()">مسح جميع بيانات الجمعية</button>
+</section>
 
 <script>
-function add(){
-let n=document.getElementById('name').value;
-let p=document.getElementById('phone').value;
-if(!n)return alert('اكتب اسم المشترك');
-let li=document.createElement('li');
-li.textContent=n+' - '+p;
-document.getElementById('members').appendChild(li);
-document.getElementById('name').value='';
-document.getElementById('phone').value='';
+const KEY="game3eya_data_v2";
+let data=JSON.parse(localStorage.getItem(KEY)||'{"members":[],"payments":{}}');
+
+const $=id=>document.getElementById(id);
+function save(){
+ localStorage.setItem(KEY,JSON.stringify(data));
+ render();
+}
+function dateNow(){
+ let d=new Date();
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+$("payDate").value=dateNow();
+
+function addMember(){
+ let name=$("memberName").value.trim();
+ let phone=$("memberPhone").value.trim();
+ if(!name)return alert("اكتب اسم المشترك");
+ if(data.members.length>=20)return alert("اكتمل عدد المشتركين (20)");
+ data.members.push({id:Date.now()+Math.random(),name,phone});
+ $("memberName").value="";
+ $("memberPhone").value="";
+ save();
+}
+function paid(id){
+ let d=$("payDate").value;
+ if(!d)return;
+ if(!data.payments[d])data.payments[d]=[];
+ let arr=data.payments[d];
+ if(arr.includes(id))data.payments[d]=arr.filter(x=>x!==id);
+ else arr.push(id);
+ save();
+}
+function removeMember(id){
+ if(!confirm("هل تريد حذف هذا المشترك؟"))return;
+ data.members=data.members.filter(m=>m.id!==id);
+ Object.keys(data.payments).forEach(d=>{
+ data.payments[d]=data.payments[d].filter(x=>x!==id);
+ });
+ save();
+}
+function render(){
+ let total=0,today=0;
+ Object.values(data.payments).forEach(a=>total+=a.length*100);
+ today=(data.payments[$("payDate").value]||[]).length*100;
+ $("count").textContent=data.members.length+" / 20";
+ $("todayTotal").textContent=today+" ج";
+ $("allTotal").textContent=total+" ج";
+
+ let paidToday=data.payments[$("payDate").value]||[];
+ $("dailyStatus").innerHTML=data.members.map(m=>{
+ let p=paidToday.includes(m.id);
+ return `<div class="member">
+ <div><b>${escapeHTML(m.name)}</b><small>${escapeHTML(m.phone||"بدون رقم هاتف")}</small></div>
+ <button class="${p?'paid':'unpaid'} smallbtn" onclick="paid(${m.id})">${p?'✓ دفع':'لم يدفع'}</button>
+ </div>`;
+ }).join("")||'<p class="muted">أضف المشتركين لبدء المتابعة.</p>';
+
+ $("members").innerHTML=data.members.map(m=>
+ `<div class="member">
+ <div><b>${escapeHTML(m.name)}</b><small>${escapeHTML(m.phone||"")}</small></div>
+ <button class="danger smallbtn" onclick="removeMember(${m.id})">حذف</button>
+ </div>`).join("")||'<p class="muted">لا يوجد مشتركين حتى الآن.</p>';
+}
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function renderDates(){
+ let start=new Date(2026,10,10);
+ $("dates").innerHTML="";
+ for(let i=0;i<20;i++){
+ let d=new Date(start);
+ d.setDate(start.getDate()+i*15);
+ let div=document.createElement("p");
+ div.className="muted";
+ div.textContent="القبضة "+(i+1)+" : "+d.toLocaleDateString("ar-EG");
+ $("dates").appendChild(div);
+ }
+}
+function clearData(){
+ if(confirm("تحذير: سيتم حذف كل المشتركين والمدفوعات نهائياً من هذا الجهاز. هل أنت متأكد؟")){
+ data={members:[],payments:{}};
+ save();
+ }
+}
+$("payDate").addEventListener("change",render);
+renderDates();
+render();
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
 }
 </script>
 </body>
