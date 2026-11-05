@@ -3,175 +3,406 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#090909">
-<link rel="manifest" href="manifest.json">
 <title>جمعيتي | الإدارة الذكية</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif;padding:16px}
-header{text-align:center;padding:24px 10px}
-header h1{color:#d6ae53;font-size:32px;margin:5px}
-header p{color:#aaa}
+body{margin:0;background:#090909;color:#fff;font-family:Arial;padding:16px}
+header{text-align:center;padding:22px}
+h1{color:#d6ae53;font-size:32px}
 .gold{color:#d6ae53}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card{background:#171717;border:1px solid #393021;border-radius:15px;padding:17px;margin-bottom:13px}
-.card h3{font-size:14px;color:#aaa;margin:0 0 12px}
-.number{font-size:25px;color:#d6ae53;font-weight:bold}
-input,button{font-family:inherit;font-size:15px;border-radius:9px;padding:12px}
-input{background:#101010;border:1px solid #555;color:white;width:100%;margin:6px 0}
-button{border:0;background:#d6ae53;color:#111;font-weight:bold;cursor:pointer}
+.card{background:#171717;border:1px solid #493b20;border-radius:15px;padding:17px;margin:13px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#222;padding:14px;border-radius:10px}
+.stat strong{display:block;color:#d6ae53;font-size:23px;margin-top:8px}
+input,button{width:100%;padding:13px;margin:6px 0;border-radius:9px;font-size:15px}
+input{background:#101010;border:1px solid #555;color:white}
+button{background:#d6ae53;color:#111;border:0;font-weight:bold}
 button:disabled{opacity:.5}
-.full{width:100%;margin-top:8px}
-.member{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #333;padding:13px 0}
-.member:last-child{border:0}
-.member small{display:block;color:#aaa;margin-top:5px}
-.paid{background:#17472e;color:#7affb0;padding:7px 10px;border-radius:8px}
-.unpaid{background:#492020;color:#ff9999;padding:7px 10px;border-radius:8px}
-.smallbtn{padding:8px 10px;font-size:12px}
+.member{padding:13px 0;border-bottom:1px solid #444}
+small,.muted{color:#aaa}
+.paid{color:#66e69b}
+.unpaid{color:#ff8585}
 .danger{background:#702929;color:white}
-.muted{color:#aaa;font-size:13px}
-section{margin-top:18px}
+.hidden{display:none}
+h2{font-size:18px;color:#d6ae53}
 </style>
 </head>
 <body>
+
 <header>
 <div class="gold">✦ نظام الإدارة المالية ✦</div>
 <h1>جمعيتي</h1>
-<p>إدارة الجمعية ومتابعة الأقساط اليومية</p>
+<p class="muted">إدارة الجمعية ومتابعة الأقساط اليومية</p>
 </header>
 
+<section class="card" id="loginBox">
+<h2>تسجيل الدخول</h2>
+<p class="muted">اكتب رقم هاتفك المصري لاستلام كود التحقق</p>
+<input id="loginPhone" type="tel" placeholder="01xxxxxxxxx">
+<div id="recaptcha-container"></div>
+<button id="sendBtn" onclick="sendCode()">إرسال كود التحقق</button>
+<div id="codeArea" class="hidden">
+<input id="smsCode" type="text" inputmode="numeric" placeholder="كود التحقق">
+<button onclick="verifyCode()">تأكيد الدخول</button>
+</div>
+<p id="loginMessage" class="muted"></p>
+</section>
+
+<main id="app" class="hidden">
+
+<section class="card">
+<div class="gold" id="welcome"></div>
+<button class="danger" onclick="logout()">تسجيل الخروج</button>
+</section>
+
+<div id="adminArea" class="hidden">
+
 <div class="grid">
-<div class="card"><h3>عدد المشتركين</h3><div class="number" id="count">0 / 20</div></div>
-<div class="card"><h3>القسط اليومي</h3><div class="number">100 ج</div></div>
-<div class="card"><h3>تحصيل اليوم</h3><div class="number" id="todayTotal">0 ج</div></div>
-<div class="card"><h3>إجمالي التحصيل</h3><div class="number" id="allTotal">0 ج</div></div>
+<div class="stat">المشتركون<strong id="count">0 / 20</strong></div>
+<div class="stat">القسط اليومي<strong>100 جنيه</strong></div>
+<div class="stat">تحصيل اليوم<strong id="todayTotal">0 ج</strong></div>
+<div class="stat">إجمالي التحصيل<strong id="allTotal">0 ج</strong></div>
 </div>
 
 <section class="card">
-<h3>📅 متابعة أقساط اليوم</h3>
+<h2>إضافة مشترك</h2>
+<input id="memberName" placeholder="اسم المشترك">
+<input id="memberPhone" type="tel" placeholder="رقم الهاتف المصري">
+<button onclick="addMember()">إضافة المشترك</button>
+</section>
+
+<section class="card">
+<h2>متابعة الأقساط اليومية</h2>
 <input type="date" id="payDate">
-<p class="muted">اختر التاريخ وسجل دفع كل مشترك.</p>
 <div id="dailyStatus"></div>
 </section>
 
 <section class="card">
-<h3>👥 إضافة مشترك جديد</h3>
-<input id="memberName" placeholder="اسم المشترك">
-<input id="memberPhone" type="tel" placeholder="رقم الهاتف (اختياري)">
-<button class="full" onclick="addMember()">+ إضافة مشترك</button>
-</section>
-
-<section class="card">
-<h3>📋 قائمة المشتركين</h3>
+<h2>قائمة المشتركين</h2>
 <div id="members"></div>
 </section>
 
 <section class="card">
-<h3>💰 مواعيد القبض</h3>
+<h2>مواعيد القبض</h2>
 <p class="muted">بداية الجمعية: 10 نوفمبر 2026</p>
 <div id="dates"></div>
 </section>
+</div>
 
+<div id="memberArea" class="hidden">
 <section class="card">
-<h3>⚙️ إعدادات الجمعية</h3>
-<p class="muted">عدد المشتركين: 20 — القسط اليومي: 100 جنيه — القبض كل 15 يوم.</p>
-<p class="muted">طريقة الدفع: فودافون كاش</p>
-<button class="full danger" onclick="clearData()">مسح جميع بيانات الجمعية</button>
+<h2>حسابي في الجمعية</h2>
+<p id="myName"></p>
+<p>رقم الهاتف: <span id="myPhone"></span></p>
+<p>حالة قسط اليوم: <strong id="myStatus"></strong></p>
 </section>
+<section class="card">
+<h2>سجل مدفوعاتي</h2>
+<div id="myPayments"></div>
+</section>
+</div>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
-const KEY="game3eya_data_v2";
-let data=JSON.parse(localStorage.getItem(KEY)||'{"members":[],"payments":{}}');
+const firebaseConfig = {
+ apiKey: "AIzaSyBo0zYgaWsk_dgTMraH6ivVyVrdU78ikww",
+ authDomain: "gam3eya-app.firebaseapp.com",
+ projectId: "gam3eya-app",
+ storageBucket: "gam3eya-app.firebasestorage.app",
+ messagingSenderId: "466613277310",
+ appId: "1:466613277310:web:1589e580ec5694d315fe2f"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+const ADMINS=[
+ "+201031099068",
+ "+201009308983"
+];
+
+let confirmation=null;
+let currentUser=null;
+let currentMember=null;
+let members=[];
+let payments=[];
 
 const $=id=>document.getElementById(id);
-function save(){
- localStorage.setItem(KEY,JSON.stringify(data));
- render();
+
+function normalizePhone(value){
+ let n=value.replace(/\D/g,"");
+ if(n.startsWith("00"))n=n.slice(2);
+ if(n.startsWith("0"))n="20"+n.slice(1);
+ if(!n.startsWith("20"))n="20"+n;
+ return "+"+n;
 }
-function dateNow(){
- let d=new Date();
+
+function isAdmin(){
+ return currentUser && ADMINS.includes(currentUser.phoneNumber);
+}
+
+function today(){
+ const d=new Date();
  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
-$("payDate").value=dateNow();
 
-function addMember(){
- let name=$("memberName").value.trim();
- let phone=$("memberPhone").value.trim();
- if(!name)return alert("اكتب اسم المشترك");
- if(data.members.length>=20)return alert("اكتمل عدد المشتركين (20)");
- data.members.push({id:Date.now()+Math.random(),name,phone});
- $("memberName").value="";
- $("memberPhone").value="";
- save();
+function message(t){
+ $("loginMessage").textContent=t;
 }
-function paid(id){
- let d=$("payDate").value;
- if(!d)return;
- if(!data.payments[d])data.payments[d]=[];
- let arr=data.payments[d];
- if(arr.includes(id))data.payments[d]=arr.filter(x=>x!==id);
- else arr.push(id);
- save();
-}
-function removeMember(id){
- if(!confirm("هل تريد حذف هذا المشترك؟"))return;
- data.members=data.members.filter(m=>m.id!==id);
- Object.keys(data.payments).forEach(d=>{
- data.payments[d]=data.payments[d].filter(x=>x!==id);
- });
- save();
-}
-function render(){
- let total=0,today=0;
- Object.values(data.payments).forEach(a=>total+=a.length*100);
- today=(data.payments[$("payDate").value]||[]).length*100;
- $("count").textContent=data.members.length+" / 20";
- $("todayTotal").textContent=today+" ج";
- $("allTotal").textContent=total+" ج";
 
- let paidToday=data.payments[$("payDate").value]||[];
- $("dailyStatus").innerHTML=data.members.map(m=>{
- let p=paidToday.includes(m.id);
- return `<div class="member">
- <div><b>${escapeHTML(m.name)}</b><small>${escapeHTML(m.phone||"بدون رقم هاتف")}</small></div>
- <button class="${p?'paid':'unpaid'} smallbtn" onclick="paid(${m.id})">${p?'✓ دفع':'لم يدفع'}</button>
- </div>`;
- }).join("")||'<p class="muted">أضف المشتركين لبدء المتابعة.</p>';
+async function sendCode(){
+ try{
+  const phone=normalizePhone($("loginPhone").value.trim());
+  if(!/^\+201[0125]\d{8}$/.test(phone)){
+   message("اكتب رقم هاتف مصري صحيح");
+   return;
+  }
 
- $("members").innerHTML=data.members.map(m=>
- `<div class="member">
- <div><b>${escapeHTML(m.name)}</b><small>${escapeHTML(m.phone||"")}</small></div>
- <button class="danger smallbtn" onclick="removeMember(${m.id})">حذف</button>
- </div>`).join("")||'<p class="muted">لا يوجد مشتركين حتى الآن.</p>';
+  $("sendBtn").disabled=true;
+
+  if(!window.recaptchaVerifier){
+   window.recaptchaVerifier=new firebase.auth.RecaptchaVerifier(
+    "recaptcha-container",{size:"normal"}
+   );
+  }
+
+  await window.recaptchaVerifier.render();
+  confirmation=await auth.signInWithPhoneNumber(phone,window.recaptchaVerifier);
+
+  $("codeArea").classList.remove("hidden");
+  message("تم إرسال كود التحقق إلى هاتفك");
+ }catch(e){
+  message("تعذر إرسال الكود: "+e.message);
+  $("sendBtn").disabled=false;
+  if(window.recaptchaVerifier){
+   window.recaptchaVerifier.clear();
+   window.recaptchaVerifier=null;
+  }
+ }
 }
+
+async function verifyCode(){
+ try{
+  const code=$("smsCode").value.trim();
+  if(!code)return message("اكتب كود التحقق");
+  await confirmation.confirm(code);
+ }catch(e){
+  message("كود التحقق غير صحيح أو انتهت صلاحيته");
+ }
+}
+
+auth.onAuthStateChanged(async user=>{
+ currentUser=user;
+ if(!user){
+  $("loginBox").classList.remove("hidden");
+  $("app").classList.add("hidden");
+  return;
+ }
+
+ $("loginBox").classList.add("hidden");
+ $("app").classList.remove("hidden");
+
+ if(isAdmin()){
+  $("adminArea").classList.remove("hidden");
+  $("memberArea").classList.add("hidden");
+  $("welcome").textContent="أهلاً بالمسؤول";
+  await loadAdmin();
+ }else{
+  $("adminArea").classList.add("hidden");
+  $("memberArea").classList.remove("hidden");
+  $("welcome").textContent="أهلاً بك في جمعيتي";
+  await loadMember();
+ }
+});
+
+async function logout(){
+ await auth.signOut();
+}
+
+async function addMember(){
+ try{
+  const name=$("memberName").value.trim();
+  const phone=normalizePhone($("memberPhone").value.trim());
+
+  if(!name)return alert("اكتب اسم المشترك");
+  if(!/^\+201[0125]\d{8}$/.test(phone))
+   return alert("رقم الهاتف غير صحيح");
+  if(members.length>=20)return alert("اكتمل عدد المشتركين");
+  if(members.some(m=>m.phoneE164===phone))
+   return alert("هذا الرقم مسجل بالفعل");
+
+  await db.collection("members").doc(phone).set({
+   name:name,
+   phoneE164:phone,
+   createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  $("memberName").value="";
+  $("memberPhone").value="";
+  await loadAdmin();
+  alert("تمت إضافة المشترك");
+ }catch(e){
+  alert("تعذر إضافة المشترك: "+e.message);
+ }
+}
+
+function paymentId(date,phone){
+ return date+"_"+phone.replace("+","");
+}
+
+async function togglePayment(m){
+ try{
+  const date=$("payDate").value;
+  const ref=db.collection("payments").doc(paymentId(date,m.phoneE164));
+  const doc=await ref.get();
+
+  if(doc.exists){
+   await ref.delete();
+  }else{
+   await ref.set({
+    phoneE164:m.phoneE164,
+    memberName:m.name,
+    date:date,
+    amount:100,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+   });
+  }
+  await loadAdmin();
+ }catch(e){
+  alert("تعذر تحديث الدفع: "+e.message);
+ }
+}
+
+async function removeMember(phone){
+ if(!confirm("هل تريد حذف المشترك؟"))return;
+ try{
+  await db.collection("members").doc(phone).delete();
+  await loadAdmin();
+ }catch(e){
+  alert("تعذر الحذف: "+e.message);
+ }
+}
+
+async function loadAdmin(){
+ try{
+  const m=await db.collection("members").get();
+  members=m.docs.map(d=>d.data());
+
+  const p=await db.collection("payments").get();
+  payments=p.docs.map(d=>d.data());
+
+  renderAdmin();
+ }catch(e){
+  alert("خطأ في قراءة البيانات: "+e.message);
+ }
+}
+
+function renderAdmin(){
+ const date=$("payDate").value;
+ const todayPayments=payments.filter(p=>p.date===date);
+
+ $("count").textContent=members.length+" / 20";
+ $("todayTotal").textContent=
+  todayPayments.reduce((s,p)=>s+p.amount,0)+" ج";
+ $("allTotal").textContent=
+  payments.reduce((s,p)=>s+p.amount,0)+" ج";
+
+ $("dailyStatus").innerHTML=members.map(m=>{
+  const paid=todayPayments.some(p=>p.phoneE164===m.phoneE164);
+  return `<div class="member">
+   <b>${escapeHTML(m.name)}</b>
+   <small>${escapeHTML(m.phoneE164)}</small>
+   <p class="${paid?'paid':'unpaid'}">${paid?'تم الدفع':'لم يدفع'}</p>
+   <button onclick='togglePaymentByPhone("${m.phoneE164}")'>
+    ${paid?'إلغاء تسجيل الدفع':'تسجيل دفع 100 جنيه'}
+   </button>
+  </div>`;
+ }).join("")||"<p class='muted'>لا يوجد مشتركين</p>";
+
+ $("members").innerHTML=members.map(m=>
+  `<div class="member">
+   <b>${escapeHTML(m.name)}</b>
+   <small>${escapeHTML(m.phoneE164)}</small>
+   <button class="danger" onclick='removeMember("${m.phoneE164}")'>حذف المشترك</button>
+  </div>`
+ ).join("")||"<p class='muted'>لا يوجد مشتركين</p>";
+}
+
+async function togglePaymentByPhone(phone){
+ const m=members.find(x=>x.phoneE164===phone);
+ if(m)await togglePayment(m);
+}
+
+async function loadMember(){
+ try{
+  const phone=currentUser.phoneNumber;
+  const doc=await db.collection("members").doc(phone).get();
+
+  if(!doc.exists){
+   $("myName").textContent="رقمك غير مسجل في الجمعية. تواصل مع المسؤول.";
+   $("myPhone").textContent=phone;
+   $("myStatus").textContent="غير مسجل";
+   $("myPayments").textContent="";
+   return;
+  }
+
+  currentMember=doc.data();
+  $("myName").textContent="الاسم: "+currentMember.name;
+  $("myPhone").textContent=phone;
+
+  const result=await db.collection("payments")
+   .where("phoneE164","==",phone).get();
+
+  const myData=result.docs.map(d=>d.data());
+  const paidToday=myData.some(p=>p.date===today());
+
+  $("myStatus").textContent=paidToday?"تم الدفع":"لم يتم الدفع";
+  $("myStatus").className=paidToday?"paid":"unpaid";
+
+  $("myPayments").innerHTML=myData
+   .sort((a,b)=>b.date.localeCompare(a.date))
+   .map(p=>`<div class="member">
+    ${escapeHTML(p.date)} — ${p.amount} جنيه
+    <span class="paid">تم الدفع</span>
+   </div>`).join("")||"<p class='muted'>لا توجد مدفوعات مسجلة</p>";
+
+ }catch(e){
+  alert("تعذر تحميل حسابك: "+e.message);
+ }
+}
+
 function escapeHTML(s){
- return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ return String(s).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
 }
+
 function renderDates(){
- let start=new Date(2026,10,10);
+ const start=new Date(2026,10,10);
  $("dates").innerHTML="";
  for(let i=0;i<20;i++){
- let d=new Date(start);
- d.setDate(start.getDate()+i*15);
- let div=document.createElement("p");
- div.className="muted";
- div.textContent="القبضة "+(i+1)+" : "+d.toLocaleDateString("ar-EG");
- $("dates").appendChild(div);
+  const d=new Date(start);
+  d.setDate(start.getDate()+i*15);
+  const p=document.createElement("p");
+  p.className="muted";
+  p.textContent="القبضة "+(i+1)+" : "+d.toLocaleDateString("ar-EG");
+  $("dates").appendChild(p);
  }
 }
-function clearData(){
- if(confirm("تحذير: سيتم حذف كل المشتركين والمدفوعات نهائياً من هذا الجهاز. هل أنت متأكد؟")){
- data={members:[],payments:{}};
- save();
- }
-}
-$("payDate").addEventListener("change",render);
+
+$("payDate").value=today();
+$("payDate").addEventListener("change",()=>{
+ if(isAdmin())renderAdmin();
+});
 renderDates();
-render();
-if("serviceWorker" in navigator){
- navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
-}
 </script>
 </body>
 </html>
